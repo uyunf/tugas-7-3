@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- tag og -->
+    <meta property="og:title" content="My website title" />
+    <meta property="og:description" content="Summary of the contents of the page you are viewing" />
+    <meta property="og:image" content="{{ url_for('static', filename='ogimage.png') }}" />
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+    <title>Sparta Coding Club | Bootstrap Practice</title>
+
+    <style>
+        .profile-img {
+            width: 50px;
+            /* Sesuaikan ukuran gambar profil sesuai kebutuhan */
+            height: 50px;
+            /* Sesuaikan ukuran gambar profil sesuai kebutuhan */
+            object-fit: cover;
+            /* Membuat gambar tetap dalam frame yang ditentukan */
+            border-radius: 50%;
+            /* Mengubah gambar profil menjadi bulat */
+            margin-bottom: 10px;
+            /* Jarak antara gambar profil dan judul */
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            // alert('Fully loaded');
+            listing();
+            bsCustomFileInput.init();
+        });
+
+        function listing() {
+            $.ajax({
+                type: 'get',
+                url: '/diary',
+                data: {},
+                success: function (response) {
+                    // let articles = response.articles; atau
+                    let articles = response['articles'];
+                    for (let i = 0; i < articles.length; i++) {
+                        let title = articles[i]['title'];
+                        let content = articles[i]['content'];
+                        let file = articles[i]['file'];
+
+                        let time = articles[i]['time'] || '????.??.??'; // tanda tanya menenntukan database yang tidak memiliki waktu, jadi memungkinkan kode masih bisa berjalan
+
+                        let profile = articles[i]['profile'];
+                        let temp_html = `
+                        <div class="col-4">
+                <div class="card">
+                    <img src="../${file}"
+                        class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <img src="../${profile}"
+                        class="profile-img" alt="...">
+                        <h5 class="card-title">${title}</h5>
+                        <p class="card-text">${content}</p>
+                        <h6 class="card-subtitle mb-2 text-muted">${time}</h6>
+                    </div>
+                </div>
+            </div>`;
+                        $('#cards-box').append(temp_html);
+                    }
+                }
+
+            });
+        }
+
+        function posting() {
+            let title = $('#image-title').val();
+            if (!title) {
+                return alert('hey user, you forgot a title');
+            }
+            let content = $('#image-description').val();
+            if (!content) {
+                return alert('hey user, you forgot a description');
+            }
+
+            let file = $('#image').prop('files')[0];
+            let profile = $('#profile').prop('files')[0];
+
+            let form_data = new FormData();
+            form_data.append('file_give', file);
+            form_data.append('profile_give', profile); // ini menambahkan file profile
+            form_data.append('title_give', title);
+            form_data.append('content_give', content);
+
+            $.ajax({
+                type: 'post',
+                url: '/diary',
+                data: form_data, // mengirimkan form data dari form data let yang di masukan
+                contentType: false, // mencegah kebingungan jenis data yang diinginkan
+                processData: false,
+                // {
+                //     title_give: title,
+                //     content_give: content,
+                // },
+                success: function (response) {
+                    console.log(response);
+                    window.location.reload();
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Content here -->
+        <div class="p-5 mb-4 bg-light rounded-3">
+            <div class="container-fluid py-5">
+                <h1 class="display-5 fw-bold">Personal Diary</h1>
+                <div class="input-group mb-3 custom-file">
+                    <input type="file" class="form-control" id="image"> <!-- Ganti id dengan "image" -->
+                </div>
+                <div class="input-group mb-3 custom-file">
+                    <input type="file" class="form-control" id="profile"> <!-- Biarkan id tetap "profile" -->
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="image title goes here" aria-label="image title"
+                        aria-describedby="basic-addon1" id="image-title">
+                </div>
+                <div class="input-group">
+                    <textarea placeholder="type in image description here" class="form-control"
+                        aria-label="image description" id="image-description"></textarea>
+                </div>
+            </div>
+            <button onclick="posting()" class="btn btn-primary btn-lg" type="button">Save</button>
+        </div>
+        <div class="row justify-content-start" id="cards-box">
+        </div>
+    </div>
+
+</body>
+
+</html>
